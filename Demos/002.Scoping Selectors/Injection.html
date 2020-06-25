@@ -1,0 +1,31 @@
+﻿<link rel="stylesheet" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-js/1.2.0/css/fabric.min.css">
+
+<div id="myDemoContainer" class="ms-font-xl">
+	<div id="message">
+	</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+
+<script type="text/javascript">
+	(function () {
+		"use strict";
+
+		if (typeof jQuery == "undefined") {
+			alert("Unable to load jQuery");
+			return;
+		}
+
+		var container = jQuery("#myDemoContainer");
+
+		jQuery(function () {
+			ExecuteOrDelayUntilScriptLoaded(initializePage, "sp.js");
+		});
+
+		function initializePage() {
+			var msg = container.find("#message");
+			msg.append("Hello World");
+		}
+
+	})();
+</script>

@@ -1,0 +1,92 @@
+﻿<link rel="stylesheet" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-js/1.2.0/css/fabric.min.css">
+
+<div id="myDemoContainer" class="ms-font-xl">
+	<div style="padding-bottom:10px;">
+		<label>Category: </label>
+		<select id="categoriesSelect">
+		</select>
+	</div>
+	<div id="message">
+	</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+
+<script type="text/javascript">
+	(function () {
+		"use strict";
+
+		if (typeof jQuery == "undefined") {
+			alert("Unable to load jQuery");
+			return;
+		}
+
+		var container = jQuery("#myDemoContainer");
+
+		jQuery(function () {
+			ExecuteOrDelayUntilScriptLoaded(initializePage, "sp.js");
+		});
+
+		function initializePage() {
+			var url = String.format(
+				"{0}/_api/Web/Lists/GetByTitle('Categories')/Items?$orderby=Title",
+				_spPageContextInfo.webAbsoluteUrl);
+
+			var call = restApiGet(url);
+			call.done(function (data) {
+				var select = container.find("#categoriesSelect");
+				data.value.forEach(function(category) {
+					var option = jQuery("<option>", { value: category.Id, text: category.Title });
+					select.append(option);
+				});
+
+				select.on("change", categoriesSelectChange);
+				categoriesSelectChange();
+			});
+			call.fail(function (jqXHR) {
+				alert(jqXHR.responseText);
+			});			
+		}
+
+		function categoriesSelectChange() {
+			var select = container.find("#categoriesSelect");
+			var categoryId = select.val();			
+
+			var url = String.format(
+				"{0}/_api/Web/Lists/GetByTitle('Products')/Items?" +
+				"$filter=CategoryId eq {1}&" +
+				"$orderby=Title",
+				_spPageContextInfo.webAbsoluteUrl, categoryId);
+
+			var call = restApiGet(url);
+			call.done(function (data) {
+				var msg = container.find("#message");
+				msg.html("Products: <br/>");
+
+				data.value.forEach(function (product) {
+					msg.append(product.Title + "<br/>");
+				});
+			});
+			call.fail(function (jqXHR) {
+				alert(jqXHR.responseText);
+			});				
+		}
+
+		function restApiGet(url, odataFormat) {
+			if (!odataFormat) odataFormat = "minimalmetadata";
+
+			var call = jQuery.ajax({
+				url: url,
+				type: "GET",
+				dataType: "json",
+				cache: false,
+				headers: {
+					Accept: "application/json;odata=" + odataFormat
+				}
+			});
+
+			return call;
+		}		
+
+	})();
+</script>

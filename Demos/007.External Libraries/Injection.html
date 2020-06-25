@@ -1,0 +1,107 @@
+﻿<link rel="stylesheet" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-js/1.2.0/css/fabric.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/datatables/1.10.16/css/dataTables.jqueryui.min.css" />
+
+<div id="myDemoContainer" class="ms-font-xl">
+	<div style="padding-bottom:50px;">
+		<label>Category: </label>
+		<select id="categoriesSelect">
+		</select>
+	</div>
+	<div>
+		<table id="productsTable" class="display" width="100%">
+			<thead>
+				<tr>
+					<th>Name</th>
+					<th>Quantity per Unit</th>
+					<th>Unit Price</th>
+					<th>Units in Stock</th>
+					<th>Units on Order</th>
+				</tr>
+			</thead>
+			<tbody></tbody>
+		</table>
+	</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/datatables/1.10.16/js/jquery.dataTables.min.js"></script>
+
+<script type="text/javascript">
+	(function () {
+		"use strict";
+
+		if (typeof jQuery == "undefined") {
+			alert("Unable to load jQuery");
+			return;
+		}
+
+		var container = jQuery("#myDemoContainer");
+
+		jQuery(function () {
+			ExecuteOrDelayUntilScriptLoaded(loadAdditionalScripts, "sp.js");
+		});
+
+		function loadAdditionalScripts() {
+			var call = jQuery.getScript(_spPageContextInfo.webAbsoluteUrl + "/SiteAssets/Injection/ProductsService.js");
+			call.done(function () {
+				initializePage();
+			});
+			call.fail(function (jqXHR, textStatus, errorThrown) {
+				alert(jqXHR.responseText);
+			});
+		}
+
+		function initializePage() {
+			var svc = new Demo.Services.ProductsService();
+			var call = svc.getCategories();
+			call.done(function (data) {
+				var select = container.find("#categoriesSelect");
+				data.value.forEach(function (category) {
+					var option = jQuery("<option>", { value: category.Id, text: category.Title });
+					select.append(option);
+				});
+
+				select.on("change", categoriesSelectChange);
+				categoriesSelectChange();
+			});
+			call.fail(function (jqXHR) {
+				alert(jqXHR.responseText);
+			});
+		}
+
+		function categoriesSelectChange() {
+			var select = container.find("#categoriesSelect");
+			var categoryId = select.val();
+
+			var svc = new Demo.Services.ProductsService();
+			var call = svc.getProductsByCategory(categoryId);
+			call.done(function (data) {
+				var table = container.find("#productsTable");
+
+				var tableData = data.value.map(function(product) {
+					product.UnitPrice = "$" + product.UnitPrice.toFixed(2);
+					return product;
+				});
+
+				table = table.DataTable({
+					"destroy": true,
+					"data": tableData,
+					"autoWidth": true,
+					"paging": false,
+					"columns": [
+						{ "data": "Title", "className": "dt-left" },
+						{ "data": "QuantityPerUnit", "className": "dt-left" },
+						{ "data": "UnitPrice", "className": "dt-right" },
+						{ "data": "UnitsInStock", "className": "dt-right" },
+						{ "data": "UnitsOnOrder", "className": "dt-right" }
+					]
+				});
+			});
+			call.fail(function (jqXHR) {
+				alert(jqXHR.responseText);
+			});
+		}
+
+
+	})();
+</script>
